@@ -10,7 +10,7 @@
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
 
-      pythonEnv = pkgs.python3.withPackages (ps: with ps; [
+      mkPythonEnv = pkgs: pkgs.python3.withPackages (ps: with ps; [
         google-api-python-client
         google-auth-httplib2
         google-auth-oauthlib
@@ -19,7 +19,8 @@
         recurring-ical-events
       ]);
 
-      waylandarPkg = pkgs.stdenv.mkDerivation {
+
+      mkWaylandar = pkgs: let pythonEnv = mkPythonEnv pkgs; in pkgs.stdenv.mkDerivation {
         pname = "waylandar";
         version = "1.0.0";
         src = ./.;
@@ -87,8 +88,13 @@
           chmod +x $out/bin/waylandar-dashboard
         '';
       };
+
+      waylandarPkg = mkWaylandar pkgs;
+      pythonEnv = mkPythonEnv pkgs;
     in
     {
+      overlays.default = final: prev: { waylandar = mkWaylandar final; };
+
       packages.${system}.default = waylandarPkg;
 
       apps.${system} = {
