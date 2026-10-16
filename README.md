@@ -31,15 +31,17 @@ nix run github:samjoshuadud/waylandar#waylandar-widget
 
 **Declarative (flake.nix):**
 ```nix
-inputs.waylandar.url = "github:samjoshuadud/waylandar";
+inputs.waylandar = {
+  url = "github:samjoshuadud/waylandar";
+  inputs.nixpkgs.follows = "nixpkgs";
+};
 
 outputs = { self, nixpkgs, waylandar, ... }: {
   nixosConfigurations.myhostname = nixpkgs.lib.nixosSystem {
     modules = [
       ({ pkgs, ... }: {
-        environment.systemPackages = [
-          waylandar.packages.x86_64-linux.default
-        ];
+        nixpkgs.overlays = [ waylandar.overlays.default ];
+        environment.systemPackages = [ pkgs.waylandar ];
       })
     ];
   };
